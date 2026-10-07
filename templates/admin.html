@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Smart Classroom System</title>
+    <meta name="description" content="Smart Classroom Admin Panel – Manage students, teachers, and subjects.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* ========== ADMIN-SPECIFIC STYLES ========== */
+        :root {
+            --admin-accent: #f59e0b;
+            --admin-accent-rgb: 245, 158, 11;
+            --admin-danger: #ef4444;
+            --admin-success: #22c55e;
+        }
+
+        .admin-body {
+            background: #080c14;
+            min-height: 100vh;
+            font-family: 'Outfit', sans-serif;
+            color: #e2e8f0;
+        }
+
+        /* Animated background */
+        .admin-bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+            animation: orbFloat 12s ease-in-out infinite alternate;
+        }
+        .admin-bg-orb-1 { width: 500px; height: 500px; background: rgba(245,158,11,0.12); top: -150px; left: -150px; }
+        .admin-bg-orb-2 { width: 400px; height: 400px; background: rgba(99,102,241,0.1); bottom: -100px; right: -100px; animation-delay: -4s; }
+        .admin-bg-orb-3 { width: 300px; height: 300px; background: rgba(239,68,68,0.07); top: 40%; left: 55%; animation-delay: -8s; }
+
+        @keyframes orbFloat {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(30px, 25px) scale(1.08); }
+        }
+
+        /* ---- Layout ---- */
+        .admin-layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+        /* ---- Sidebar ---- */
+        .admin-sidebar {
+            width: 260px;
+            background: rgba(255,255,255,0.035);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            flex-direction: column;
+            padding: 28px 20px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .admin-brand .logo-wrap {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 20px rgba(245,158,11,0.3);
+        }
+
+        .admin-brand h2 { font-size: 1.1rem; font-weight: 700; color: #fff; line-height: 1.2; }
+        .admin-brand span { font-size: 0.72rem; color: #f59e0b; font-weight: 500; }
+
+        .admin-badge {
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(239,68,68,0.15));
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .admin-avatar { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg,#f59e0b,#ef4444); display: flex; align-items:center; justify-content:center; font-size: 1.1rem; font-weight:700; color:#fff; }
+        .admin-badge .meta .name { font-weight: 600; font-size: 0.9rem; color: #fff; }
+        .admin-badge .meta .role { font-size: 0.72rem; color: #f59e0b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .admin-nav ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .admin-nav-btn {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 11px 14px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-family: 'Outfit', sans-serif;
+        }
+        .admin-nav-btn:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+        .admin-nav-btn.active { background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1)); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+        .admin-nav-btn .nav-icon { font-size: 1.1rem; }
+
+        .admin-sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.07); }
+        .btn-admin-logout {
+            width: 100%;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.2);
+            padding: 11px 14px;
+            border-radius: 10px;
+            color: #f87171;
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-admin-logout:hover { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+        /* ---- Main Content ---- */
+        .admin-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        .admin-topbar {
+            padding: 22px 32px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(10px);
+        }
+        .admin-topbar h1 { font-size: 1.4rem; font-weight: 700; color: #fff; }
+        .admin-topbar .topbar-subtitle { font-size: 0.82rem; color: #64748b; margin-top: 2px; }
+        .admin-topbar-right .date-chip {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.09);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            color: #94a3b8;
+        }
+
+        .admin-content { flex: 1; padding: 28px 32px; overflow-y: auto; }
+
+        /* ---- Stats Row ---- */
+        .admin-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+        .admin-stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .admin-stat-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.14); }
+        .admin-stat-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .admin-stat-info .label { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+        .admin-stat-info .value { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1.1; margin-top: 2px; }
+
+        /* ---- Panel System ---- */
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
+
+        /* ---- Glass Card ---- */
+        .admin-glass-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .card-header h3 { font-size: 1rem; font-weight: 700; color: #e2e8f0; }
+        .card-header .count-chip {
+            background: rgba(245,158,11,0.15);
+            color: #f59e0b;
+            font-size: 0.78rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            border: 1px solid rgba(245,158,11,0.25);
+        }
+
+        /* ---- Search & Filter Bar ---- */
+        .filter-bar {
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-bar input, .filter-bar select {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 9px 14px;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            outline: none;
+            font-family: 'Outfit', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .filter-bar input { min-width: 240px; }
+        .filter-bar input:focus, .filter-bar select:focus { border-color: rgba(245,158,11,0.4); }
+        .filter-bar input::placeholder { color: #475569; }
+
+        /* ---- Admin Table ---- */
+        .admin-table-wrap { overflow-x: auto; }
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table th {
+            padding: 13px 20px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .admin-table td {
+            padding: 14px 20px;
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            vertical-align: middle;
+        }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background: rgba(255,255,255,0.025); }
+
+        /* Row badges */
+        .role-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .role-badge.student { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.25); }
+        .role-badge.teacher { background: rgba(20,184,166,0.15); color: #2dd4bf; border: 1px solid rgba(20,184,166,0.25); }
+        .role-badge.admin   { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+
+        /* Action buttons in table */
+        .tbl-actions { display: flex; gap: 8px; align-items: center; }
+        .btn-tbl {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.18s;
+        }
+        .btn-tbl-delete {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+        .btn-tbl-delete:hover { background: rgba(239,68,68,0.25); }
+        .btn-tbl-edit {
+            background: rgba(99,102,241,0.12);
+            color: #a5b4fc;
+            border: 1px solid rgba(99,102,241,0.2);
+        }
+        .btn-tbl-edit:hover { background: rgba(99,102,241,0.25); }
+
+        /* ---- Buttons ---- */
+        .btn-admin-primary {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #1a1a1a;
+            font-weight: 700;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-family: 'Outfit', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(245,158,11,0.25);
+        }
+        .btn-admin-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,158,11,0.35); }
+        .btn-admin-secondary {
+            background: rgba(255,255,255,0.07);
+            color: #94a3b8;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-admin-secondary:hover { background: rgba(255,255,255,0.12); color: #e2e8f0; }
+
+        /* ---- Modals ---- */
+        .admin-modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-modal-overlay.active { display: flex; }
+        .admin-modal {
+            background: #111827;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            margin: 20px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+            animation: modalPop 0.25s cubic-bezier(.175,.885,.32,1.275);
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.88); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+        .admin-modal-header {
+            padding: 22px 24px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .admin-modal-header h3 { font-size: 1.05rem; font-weight: 700; color: #fff; }
+        .admin-modal-close {
+            background: rgba(255,255,255,0.07);
+            border: none;
+            color: #94a3b8;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex; align-items:center; justify-content:center;
+            transition: all 0.2s;
+        }
+        .admin-modal-close:hover { background: rgba(239,68,68,0.2); color: #f87171; }
+        .admin-modal-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 16px; }
+        .admin-modal-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; gap: 12px; justify-content: flex-end; }
+
+        /* Form elements in modal */
+        .admin-form-group { display: flex; flex-direction: column; gap: 7px; }
+        .admin-form-group label { font-size: 0.8rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .admin-form-group input,
+        .admin-form-group select {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            outline: none;
+            font-family: 'Outfit', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .admin-form-group input:focus,
+        .admin-form-group select:focus { border-color: rgba(245,158,11,0.5); box-shadow: 0 0 0 3px rgba(245,158,11,0.08); }
+        .admin-form-group input::placeholder { color: #475569; }
+        .admin-form-group select option { background: #1e2736; }
+
+        /* ---- Toast (reuse from main) ---- */
+        .admin-toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .admin-toast {
+            background: rgba(15,23,42,0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            min-width: 280px;
+            max-width: 360px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            animation: toastIn 0.3s ease;
+            transition: opacity 0.3s, transform 0.3s;
+            font-size: 0.875rem;
+            color: #cbd5e1;
+        }
+        @keyframes toastIn { from { transform: translateY(-15px); opacity: 0; } }
+        .admin-toast.success { border-left: 3px solid #22c55e; }
+        .admin-toast.error   { border-left: 3px solid #ef4444; }
+        .admin-toast.info    { border-left: 3px solid #3b82f6; }
+        .admin-toast-close { margin-left: auto; background: none; border: none; color: #64748b; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+
+        /* ---- Empty State ---- */
+        .empty-state { text-align: center; padding: 50px 20px; color: #475569; }
+        .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.9rem; }
+
+        /* ---- Confirm Delete Modal ---- */
+        .danger-icon { text-align: center; font-size: 3rem; margin-bottom: 4px; }
+        .danger-text { text-align: center; color: #94a3b8; font-size: 0.9rem; line-height: 1.5; }
+        .danger-text strong { color: #f87171; }
+    </style>
+</head>
+<body class="admin-body">
+    <!-- Background Orbs -->
+    <div class="admin-bg-orb admin-bg-orb-1"></div>
+    <div class="admin-bg-orb admin-bg-orb-2"></div>
+    <div class="admin-bg-orb admin-bg-orb-3"></div>
+
+    <!-- Toast Container -->
+    <div class="admin-toast-container" id="admin-toast-container"></div>
+
+    <div class="admin-layout">
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="admin-sidebar">
+            <div class="admin-brand">
+                <div class="logo-wrap">⚙️</div>
+                <div>
+                    <h2>SmartClass</h2>
+                    <span>Admin Console</span>
+                </div>
+            </div>
+
+            <div class="admin-badge">
+                <div class="admin-avatar">A</div>
+                <div class="meta">
+                    <div class="name">{{ name }}</div>
+                    <div class="role">Administrator</div>
+                </div>
+            </div>
+
+            <nav class="admin-nav">
+                <ul>
+                    <li>
+                        <button class="admin-nav-btn active" id="nav-overview" onclick="switchAdminTab('overview')">
+                            <span class="nav-icon">📊</span> Dashboard
+                        </button>
+                    </li>
+                    <li>
+                        <button class="admin-nav-btn" id="nav-users" onclick="switchAdminTab('users')">
+                            <span class="nav-icon">👥</span> Manage Users
+                        </button>
+                    </li>
+                    <li>
+                        <button class="admin-nav-btn" id="nav-subjects" onclick="switchAdminTab('subjects')">
+                            <span class="nav-icon">📚</span> Manage Subjects
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="btn-admin-logout">
+                    <span>🔑</span> Sign Out
+                </a>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div>
+                    <h1 id="admin-page-title">Dashboard Overview</h1>
+                    <div class="topbar-subtitle">Smart Classroom System – Administration</div>
+                </div>
+                <div class="admin-topbar-right">
+                    <span class="date-chip" id="admin-date"></span>
+                </div>
+            </header>
+
+            <div class="admin-content">
+
+                <!-- ===== PANEL: OVERVIEW ===== -->
+                <div class="admin-panel active" id="panel-overview">
+                    <div class="admin-stats-row">
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon" style="background: rgba(99,102,241,0.15);">👨‍🎓</div>
+                            <div class="admin-stat-info">
+                                <div class="label">Total Students</div>
+                                <div class="value" id="ov-students">–</div>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon" style="background: rgba(20,184,166,0.15);">👩‍🏫</div>
+                            <div class="admin-stat-info">
+                                <div class="label">Total Teachers</div>
+                                <div class="value" id="ov-teachers">–</div>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-icon" style="background: rgba(245,158,11,0.15);">📖</div>
+                            <div class="admin-stat-info">
+                                <div class="label">Total Subjects</div>
+                                <div class="value" id="ov-subjects">–</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Recent Users -->
+                    <div class="admin-glass-card">
+                        <div class="card-header">
+                            <h3>Recently Added Users</h3>
+                            <button class="btn-admin-primary" onclick="switchAdminTab('users')">View All Users</button>
+                        </div>
+                        <div class="admin-table-wrap">
+                            <table class="admin-table" id="overview-recent-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Username</th>
+                                        <th>Role</th>
+                                        <th>Roll / ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="overview-recent-body">
+                                    <tr><td colspan="4" style="text-align:center; color:#475569;">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PANEL: MANAGE USERS ===== -->
+                <div class="admin-panel" id="panel-users">
+                    <div class="admin-glass-card">
+                        <div class="card-header">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <h3>All Users</h3>
+                                <span class="count-chip" id="users-count">0</span>
+                            </div>
+                            <button class="btn-admin-primary" onclick="openAdminModal('add-user-modal')">
+                                ＋ Add User
+                            </button>
+                        </div>
+                        <div class="filter-bar">
+                            <input type="text" id="user-search" placeholder="🔍  Search by name or username..." oninput="filterUsers()">
+                            <select id="user-role-filter" onchange="filterUsers()">
+                                <option value="all">All Roles</option>
+                                <option value="student">Students</option>
+                                <option value="teacher">Teachers</option>
+                            </select>
+                        </div>
+                        <div class="admin-table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Roll / Identifier</th>
+                    <th>Semester</th>
+                    <th>Department</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="users-table-body">
+                <tr><td colspan="7" style="text-align:center; color:#475569; padding: 30px;">Loading users...</td></tr>
+            </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PANEL: MANAGE SUBJECTS ===== -->
+                <div class="admin-panel" id="panel-subjects">
+                    <div class="admin-glass-card">
+                        <div class="card-header">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <h3>All Subjects</h3>
+                                <span class="count-chip" id="subjects-count">0</span>
+                            </div>
+                            <button class="btn-admin-primary" onclick="openAdminModal('add-subject-modal')">
+                                ＋ Add Subject
+                            </button>
+                        </div>
+                        <div class="admin-table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Subject Name</th>
+                                        <th>Assigned Teacher</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subjects-table-body">
+                                    <tr><td colspan="3" style="text-align:center; color:#475569; padding: 30px;">Loading subjects...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /admin-content -->
+        </main>
+    </div>
+
+    <!-- ===== MODAL: ADD USER ===== -->
+    <div class="admin-modal-overlay" id="add-user-modal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h3>➕ Add New User</h3>
+                <button class="admin-modal-close" onclick="closeAdminModal('add-user-modal')">&times;</button>
+            </div>
+            <form id="add-user-form" onsubmit="submitAddUser(event)">
+                <div class="admin-modal-body">
+                    <div class="admin-form-group">
+                        <label>Role *</label>
+                        <select id="new-user-role" required onchange="toggleRollField()">
+                            <option value="">Select role...</option>
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                        </select>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="new-user-name" required placeholder="e.g. Arpita Sharma">
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Username *</label>
+                        <input type="text" id="new-user-username" required placeholder="e.g. arpita_sharma">
+                    </div>
+                    <div class="admin-form-group" id="roll-field-group">
+                        <label>Roll Number <span style="color:#475569;">(students only)</span></label>
+                        <input type="text" id="new-user-roll" placeholder="e.g. 2301950">
+                    </div>
+                    <div class="admin-form-group student-only-field" id="semester-field-group">
+                        <label>Semester <span style="color:#475569;">(students only)</span></label>
+                        <select id="new-user-semester">
+                            <option value="">Select semester...</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                        </select>
+                    </div>
+                    <div class="admin-form-group student-only-field" id="department-field-group">
+                        <label>Department <span style="color:#475569;">(students only)</span></label>
+                        <select id="new-user-department">
+                            <option value="">Select department...</option>
+                            <option value="Computer Science Department">Computer Science Department</option>
+                            <option value="Electrical Department">Electrical Department</option>
+                            <option value="Printing Technology">Printing Technology</option>
+                        </select>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Password *</label>
+                        <input type="password" id="new-user-password" required placeholder="Set a strong password">
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-admin-secondary" onclick="closeAdminModal('add-user-modal')">Cancel</button>
+                    <button type="submit" class="btn-admin-primary">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: CONFIRM DELETE USER ===== -->
+    <div class="admin-modal-overlay" id="delete-user-modal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h3>⚠️ Confirm Deletion</h3>
+                <button class="admin-modal-close" onclick="closeAdminModal('delete-user-modal')">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <div class="danger-icon">🗑️</div>
+                <p class="danger-text" id="delete-user-confirm-text">Are you sure you want to delete this user? This action cannot be undone.</p>
+            </div>
+            <div class="admin-modal-footer">
+                <button class="btn-admin-secondary" onclick="closeAdminModal('delete-user-modal')">Cancel</button>
+                <button class="btn-tbl btn-tbl-delete" style="padding: 10px 20px; font-size:0.875rem;" onclick="confirmDeleteUser()">Delete Permanently</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: ADD SUBJECT ===== -->
+    <div class="admin-modal-overlay" id="add-subject-modal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h3>📖 Add New Subject</h3>
+                <button class="admin-modal-close" onclick="closeAdminModal('add-subject-modal')">&times;</button>
+            </div>
+            <form id="add-subject-form" onsubmit="submitAddSubject(event)">
+                <div class="admin-modal-body">
+                    <div class="admin-form-group">
+                        <label>Subject Name *</label>
+                        <input type="text" id="new-subject-name" required placeholder="e.g. Computer Networks">
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Assign to Teacher *</label>
+                        <select id="new-subject-teacher" required>
+                            <option value="">Select teacher...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-admin-secondary" onclick="closeAdminModal('add-subject-modal')">Cancel</button>
+                    <button type="submit" class="btn-admin-primary">Create Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: CONFIRM DELETE SUBJECT ===== -->
+    <div class="admin-modal-overlay" id="delete-subject-modal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <h3>⚠️ Confirm Deletion</h3>
+                <button class="admin-modal-close" onclick="closeAdminModal('delete-subject-modal')">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <div class="danger-icon">📚</div>
+                <p class="danger-text" id="delete-subject-confirm-text">Are you sure you want to delete this subject?</p>
+            </div>
+            <div class="admin-modal-footer">
+                <button class="btn-admin-secondary" onclick="closeAdminModal('delete-subject-modal')">Cancel</button>
+                <button class="btn-tbl btn-tbl-delete" style="padding: 10px 20px; font-size:0.875rem;" onclick="confirmDeleteSubject()">Delete Subject</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ======= STATE =======
+    let allUsers = [];
+    let allSubjectsData = [];
+    let pendingDeleteUserId = null;
+    let pendingDeleteSubjectId = null;
+
+    // ======= INIT =======
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('admin-date').innerText = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+        loadAdminOverview();
+    });
+
+    // ======= TAB NAVIGATION =======
+    function switchAdminTab(tab) {
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`panel-${tab}`).classList.add('active');
+        document.getElementById(`nav-${tab}`).classList.add('active');
+
+        const titles = { overview: 'Dashboard Overview', users: 'Manage Users', subjects: 'Manage Subjects' };
+        document.getElementById('admin-page-title').innerText = titles[tab] || 'Admin';
+
+        if (tab === 'overview') loadAdminOverview();
+        else if (tab === 'users') loadUsers();
+        else if (tab === 'subjects') loadSubjectsPanel();
+    }
+
+    // ======= TOAST =======
+    function adminToast(msg, type = 'info') {
+        const c = document.getElementById('admin-toast-container');
+        const t = document.createElement('div');
+        t.className = `admin-toast ${type}`;
+        const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+        t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${msg}</span><button class="admin-toast-close" onclick="this.parentElement.remove()">×</button>`;
+        c.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-15px)'; setTimeout(()=>t.remove(), 300); }, 4000);
+    }
+
+    // ======= MODAL =======
+    function openAdminModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeAdminModal(id) {
+        document.getElementById(id).classList.remove('active');
+        const form = document.querySelector(`#${id} form`);
+        if (form) form.reset();
+    }
+
+    // ======= OVERVIEW =======
+    async function loadAdminOverview() {
+        try {
+            const [usersRes, subjectsRes] = await Promise.all([
+                fetch('/api/admin/users'),
+                fetch('/api/admin/subjects')
+            ]);
+            const users = await usersRes.json();
+            const subjects = await subjectsRes.json();
+
+            allUsers = users;
+            allSubjectsData = subjects;
+
+            const students = users.filter(u => u.role === 'student');
+            const teachers = users.filter(u => u.role === 'teacher');
+
+            document.getElementById('ov-students').innerText = students.length;
+            document.getElementById('ov-teachers').innerText = teachers.length;
+            document.getElementById('ov-subjects').innerText = subjects.length;
+
+            // Show last 5 users added
+            const recent = [...users].slice(-5).reverse();
+            const tbody = document.getElementById('overview-recent-body');
+            tbody.innerHTML = '';
+            recent.forEach(u => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:600; color:#e2e8f0;">${u.name}</td>
+                        <td style="color:#64748b;">${u.username}</td>
+                        <td><span class="role-badge ${u.role}">${u.role}</span></td>
+                        <td style="color:#64748b; font-size:0.82rem;">${u.roll_number || '—'}</td>
+                    </tr>`;
+            });
+        } catch(e) {
+            adminToast('Failed to load overview data', 'error');
+        }
+    }
+
+    // ======= USER MANAGEMENT =======
+    async function loadUsers() {
+        try {
+            const res = await fetch('/api/admin/users');
+            allUsers = await res.json();
+            renderUsersTable(allUsers);
+        } catch(e) {
+            adminToast('Failed to load users', 'error');
+        }
+    }
+
+    function renderUsersTable(users) {
+        const tbody = document.getElementById('users-table-body');
+        document.getElementById('users-count').innerText = users.length;
+        tbody.innerHTML = '';
+
+        if (!users.length) {
+            tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👤</div><p>No users found.</p></div></td></tr>`;
+            return;
+        }
+
+        users.forEach(u => {
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight:600; color:#e2e8f0;">${u.name}</td>
+                    <td style="color:#94a3b8;">${u.username}</td>
+                    <td><span class="role-badge ${u.role}">${u.role}</span></td>
+                    <td style="color:#64748b; font-size:0.82rem;">${u.roll_number || '—'}</td>
+                    <td style="color:#64748b; font-size:0.82rem;">${u.semester ? `Sem ${u.semester}` : '—'}</td>
+                    <td style="color:#64748b; font-size:0.82rem;">${u.department || '—'}</td>
+                    <td>
+                        <div class="tbl-actions">
+                            <button class="btn-tbl btn-tbl-delete" onclick="openDeleteUser(${u.id}, '${u.name.replace(/'/g,"\\'")}')">🗑 Delete</button>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    function filterUsers() {
+        const q = document.getElementById('user-search').value.toLowerCase();
+        const roleFilter = document.getElementById('user-role-filter').value;
+        const filtered = allUsers.filter(u => {
+            const matchesSearch = u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
+            const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+            return matchesSearch && matchesRole;
+        });
+        renderUsersTable(filtered);
+    }
+
+    function toggleRollField() {
+        const role = document.getElementById('new-user-role').value;
+        const rollGroup = document.getElementById('roll-field-group');
+        const studentFields = document.querySelectorAll('.student-only-field');
+        rollGroup.style.display = role === 'teacher' ? 'none' : 'flex';
+        studentFields.forEach(field => field.style.display = role === 'teacher' ? 'none' : 'flex');
+    }
+
+    async function submitAddUser(e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('new-user-name').value.trim(),
+            username: document.getElementById('new-user-username').value.trim(),
+            role: document.getElementById('new-user-role').value,
+            roll_number: document.getElementById('new-user-roll').value.trim() || null,
+            semester: document.getElementById('new-user-semester').value || null,
+            department: document.getElementById('new-user-department').value || null,
+            password: document.getElementById('new-user-password').value,
+        };
+
+        try {
+            const res = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                adminToast(`User "${payload.name}" created successfully!`, 'success');
+                closeAdminModal('add-user-modal');
+                loadUsers();
+                loadAdminOverview();
+            } else {
+                adminToast(data.error || 'Failed to create user', 'error');
+            }
+        } catch(e) {
+            adminToast('Network error', 'error');
+        }
+    }
+
+    function openDeleteUser(userId, userName) {
+        pendingDeleteUserId = userId;
+        document.getElementById('delete-user-confirm-text').innerHTML =
+            `Are you sure you want to permanently delete <strong>${userName}</strong>? All their attendance and session data will be lost.`;
+        openAdminModal('delete-user-modal');
+    }
+
+    async function confirmDeleteUser() {
+        if (!pendingDeleteUserId) return;
+        try {
+            const res = await fetch(`/api/admin/users/${pendingDeleteUserId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok) {
+                adminToast('User deleted successfully.', 'success');
+                closeAdminModal('delete-user-modal');
+                loadUsers();
+                loadAdminOverview();
+            } else {
+                adminToast(data.error || 'Failed to delete user', 'error');
+            }
+        } catch(e) {
+            adminToast('Network error', 'error');
+        }
+        pendingDeleteUserId = null;
+    }
+
+    // ======= SUBJECT MANAGEMENT =======
+    async function loadSubjectsPanel() {
+        try {
+            const [subjectsRes, usersRes] = await Promise.all([
+                fetch('/api/admin/subjects'),
+                fetch('/api/admin/users')
+            ]);
+            allSubjectsData = await subjectsRes.json();
+            const users = await usersRes.json();
+            const teachers = users.filter(u => u.role === 'teacher');
+
+            // Populate teacher dropdown in Add Subject modal
+            const teacherSelect = document.getElementById('new-subject-teacher');
+            teacherSelect.innerHTML = '<option value="">Select teacher...</option>';
+            teachers.forEach(t => {
+                teacherSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+            });
+
+            renderSubjectsTable(allSubjectsData);
+        } catch(e) {
+            adminToast('Failed to load subjects', 'error');
+        }
+    }
+
+    function renderSubjectsTable(subjects) {
+        const tbody = document.getElementById('subjects-table-body');
+        document.getElementById('subjects-count').innerText = subjects.length;
+        tbody.innerHTML = '';
+
+        if (!subjects.length) {
+            tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state"><div class="empty-icon">📚</div><p>No subjects found.</p></div></td></tr>`;
+            return;
+        }
+
+        subjects.forEach(s => {
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight:600; color:#e2e8f0;">${s.name}</td>
+                    <td>
+                        <span style="background:rgba(20,184,166,0.1); color:#2dd4bf; border:1px solid rgba(20,184,166,0.2); padding:3px 10px; border-radius:6px; font-size:0.8rem;">
+                            ${s.teacher_name || 'Unassigned'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="tbl-actions">
+                            <button class="btn-tbl btn-tbl-delete" onclick="openDeleteSubject(${s.id}, '${s.name.replace(/'/g,"\\'")}')">🗑 Delete</button>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    async function submitAddSubject(e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('new-subject-name').value.trim(),
+            teacher_id: parseInt(document.getElementById('new-subject-teacher').value),
+        };
+        try {
+            const res = await fetch('/api/admin/subjects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                adminToast(`Subject "${payload.name}" created!`, 'success');
+                closeAdminModal('add-subject-modal');
+                loadSubjectsPanel();
+                loadAdminOverview();
+            } else {
+                adminToast(data.error || 'Failed to create subject', 'error');
+            }
+        } catch(e) {
+            adminToast('Network error', 'error');
+        }
+    }
+
+    function openDeleteSubject(subjectId, subjectName) {
+        pendingDeleteSubjectId = subjectId;
+        document.getElementById('delete-subject-confirm-text').innerHTML =
+            `Delete subject <strong>${subjectName}</strong>? All attendance records and notes for this subject will also be removed.`;
+        openAdminModal('delete-subject-modal');
+    }
+
+    async function confirmDeleteSubject() {
+        if (!pendingDeleteSubjectId) return;
+        try {
+            const res = await fetch(`/api/admin/subjects/${pendingDeleteSubjectId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok) {
+                adminToast('Subject deleted successfully.', 'success');
+                closeAdminModal('delete-subject-modal');
+                loadSubjectsPanel();
+                loadAdminOverview();
+            } else {
+                adminToast(data.error || 'Failed to delete subject', 'error');
+            }
+        } catch(e) {
+            adminToast('Network error', 'error');
+        }
+        pendingDeleteSubjectId = null;
+    }
+    </script>
+</body>
+</html>

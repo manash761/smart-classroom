@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Smart Classroom System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+    <!-- Glowing background elements -->
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    
+    <div class="login-container">
+        <!-- System Title -->
+        <div class="brand-header">
+            <div class="logo-icon">⚡</div>
+            <h1>SmartClass</h1>
+            <p>Next-Gen Classroom Tracking & Management</p>
+        </div>
+
+        <!-- Glassmorphism Card -->
+        <div class="login-card">
+            <!-- Tabs Selector -->
+            <div class="role-selector">
+                <button type="button" class="role-tab active" id="tab-student" onclick="setRole('student')">
+                    Student Portal
+                </button>
+                <button type="button" class="role-tab" id="tab-teacher" onclick="setRole('teacher')">
+                    Teacher Portal
+                </button>
+                <button type="button" class="role-tab" id="tab-admin" onclick="setRole('admin')">
+                    Admin
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form action="{{ url_for('login') }}" method="POST" class="login-form">
+                <!-- Hidden input for selected role -->
+                <input type="hidden" name="role" id="role-input" value="student">
+                
+                <h2 id="login-title">Student Login</h2>
+                <p class="subtitle" id="login-subtitle">Enter your student username and password to track your attendance.</p>
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <span class="alert-icon">⚠️</span>
+                                <span class="alert-message">{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="input-group">
+                    <input type="text" name="username" id="username" required placeholder=" ">
+                    <label for="username" id="username-label">Student Username</label>
+                    <span class="input-focus-line"></span>
+                </div>
+
+                <div class="input-group password-group">
+                    <input type="password" name="password" id="password" required placeholder=" ">
+                    <label for="password">Password</label>
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <svg class="eye-icon" id="eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <svg class="eye-icon hidden" id="eye-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    </button>
+                    <span class="input-focus-line"></span>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <span>Log In</span>
+                    <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
+            </form>
+        </div>
+        
+        <!-- Footer info -->
+        <div class="login-footer">
+            <p>Smart Classroom System &copy; 2026. Made as a final semester project.</p>
+        </div>
+    </div>
+
+    <script>
+        function setRole(role) {
+            document.getElementById('role-input').value = role;
+            
+            const tabStudent = document.getElementById('tab-student');
+            const tabTeacher = document.getElementById('tab-teacher');
+            const tabAdmin   = document.getElementById('tab-admin');
+            const loginTitle = document.getElementById('login-title');
+            const loginSubtitle = document.getElementById('login-subtitle');
+            const usernameLabel = document.getElementById('username-label');
+            
+            // Reset all tabs
+            [tabStudent, tabTeacher, tabAdmin].forEach(t => t && t.classList.remove('active'));
+
+            if (role === 'student') {
+                tabStudent.classList.add('active');
+                loginTitle.innerText = "Student Login";
+                loginSubtitle.innerText = "Enter your student username and password to track your attendance.";
+                usernameLabel.innerText = "Student Username";
+            } else if (role === 'teacher') {
+                tabTeacher.classList.add('active');
+                loginTitle.innerText = "Teacher Administration";
+                loginSubtitle.innerText = "Authorized access only. Log in with teacher credentials to manage class.";
+                usernameLabel.innerText = "Teacher Username";
+            } else if (role === 'admin') {
+                tabAdmin.classList.add('active');
+                loginTitle.innerText = "Admin Console";
+                loginSubtitle.innerText = "Restricted area. System administrator access only.";
+                usernameLabel.innerText = "Admin Username";
+            }
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeOpen = document.getElementById('eye-open');
+            const eyeClosed = document.getElementById('eye-closed');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Smart Classroom System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dashboard-body">
+    <!-- Glowing background elements -->
+    <div class="glow-orb glow-orb-3"></div>
+    <div class="glow-orb glow-orb-4"></div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="logo-icon">⚡</span>
+                <span class="brand-name">SmartClass</span>
+            </div>
+            
+            <div class="user-profile-badge">
+                <div class="avatar-circle">
+                    {{ name[0] }}
+                </div>
+                <div class="user-meta">
+                    <span class="user-name">{{ name }}</span>
+                    <span class="user-role-label">{{ role | capitalize }}</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    {% if role == 'teacher' %}
+                    <li>
+                        <button class="nav-item active" data-tab="overview" onclick="switchTab('overview')">
+                            <span class="nav-icon">📊</span>
+                            <span>Overview</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nav-item" data-tab="attendance" onclick="switchTab('attendance')">
+                            <span class="nav-icon">📝</span>
+                            <span>Mark Attendance</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nav-item" data-tab="notes" onclick="switchTab('notes')">
+                            <span class="nav-icon">📚</span>
+                            <span>Share Notes</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nav-item" data-tab="assignments" onclick="switchTab('assignments')">
+                            <span class="nav-icon">✏️</span>
+                            <span>Assignments</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nav-item" data-tab="notices" onclick="switchTab('notices')">
+                            <span class="nav-icon">📢</span>
+                            <span>Bulletin Board</span>
+                        </button>
+                    </li>
+                    {% else %}
+                    <li>
+                        <button class="nav-item active" data-tab="student-attendance" onclick="switchTab('student-attendance')">
+                            <span class="nav-icon">📊</span>
+                            <span>My Attendance</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nav-item" data-tab="student-notes" onclick="switchTab('student-notes')">
+                            <span class="nav-icon">📚</span>
+                            <span>Class Notes</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nav-item" data-tab="student-assignments" onclick="switchTab('student-assignments')">
+                            <span class="nav-icon">✏️</span>
+                            <span>My Assignments</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="nav-item" data-tab="student-notices" onclick="switchTab('student-notices')">
+                            <span class="nav-icon">📢</span>
+                            <span>Notices</span>
+                        </button>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="btn-logout">
+                    <span class="nav-icon">🔑</span>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h2 id="current-tab-title">Overview</h2>
+                <div class="top-bar-actions">
+                    <span class="current-date" id="header-date">June 9, 2026</span>
+                </div>
+            </header>
+
+            <div class="content-viewport">
+                <!-- ================= TEACHER DASHBOARD PANELS ================= -->
+                {% if role == 'teacher' %}
+                
+                <!-- Panel: Overview -->
+                <section class="tab-panel active" id="panel-overview">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon-wrap" style="--accent: #6366f1;">👥</div>
+                            <div class="stat-info">
+                                <span class="stat-label">Total Students</span>
+                                <h3 id="stat-total-students" class="stat-number">0</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrap" style="--accent: #14b8a6;">📈</div>
+                            <div class="stat-info">
+                                <span class="stat-label">Average Attendance</span>
+                                <h3 id="stat-attendance-avg" class="stat-number">0%</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrap" style="--accent: #8b5cf6;">📢</div>
+                            <div class="stat-info">
+                                <span class="stat-label">Bulletins Posted</span>
+                                <h3 id="stat-total-notices" class="stat-number">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-split-row">
+                        <!-- Student Roster Summary -->
+                        <div class="glass-container flex-grow-2">
+                            <div class="container-header">
+                                <h3>Student Roster & Performance</h3>
+                                <div class="search-bar">
+                                    <input type="text" id="roster-search" placeholder="Search by name or roll..." oninput="filterRosterTable()">
+                                </div>
+                            </div>
+                            <div class="attendance-filter-row">
+                                <label for="roster-semester">Semester</label>
+                                <select id="roster-semester" onchange="refreshTeacherOverview()">
+                                    <option value="">All Semesters</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                </select>
+                                <label for="roster-department">Department</label>
+                                <select id="roster-department" onchange="refreshTeacherOverview()">
+                                    <option value="">All Departments</option>
+                                    <option value="Computer Science Department">Computer Science Department</option>
+                                    <option value="Electrical Department">Electrical Department</option>
+                                    <option value="Printing Technology">Printing Technology</option>
+                                </select>
+                            </div>
+                            <div class="table-scroll-wrapper">
+                                <table class="custom-table" id="roster-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Roll No.</th>
+                                            <th>Student Name</th>
+                                            <th>Semester</th>
+                                            <th>Department</th>
+                                            <th>Classes Marked</th>
+                                            <th>Attendance Rate</th>
+                                            <th>Category</th>
+                                            <th>Status Bar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="roster-table-body">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Panel: Mark Attendance -->
+                <section class="tab-panel" id="panel-attendance">
+                    <div class="glass-container">
+                        <div class="attendance-control-header">
+                            <div class="date-selector-group">
+                                <label for="attendance-subject">Subject:</label>
+                                <select id="attendance-subject" onchange="loadAttendanceSheet()" style="background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-glass); padding: 10px 16px; border-radius: 10px; color: #fff; outline: none; margin-right: 15px; cursor: pointer;"></select>
+                                <label for="attendance-semester">Semester:</label>
+                                <select id="attendance-semester" onchange="loadAttendanceSheet()" style="background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-glass); padding: 10px 16px; border-radius: 10px; color: #fff; outline: none; margin-right: 15px; cursor: pointer;">
+                                    <option value="">All</option>
+                                    <option value="1">Sem 1</option>
+                                    <option value="2">Sem 2</option>
+                                    <option value="3">Sem 3</option>
+                                    <option value="4">Sem 4</option>
+                                    <option value="5">Sem 5</option>
+                                    <option value="6">Sem 6</option>
+                                </select>
+                                <label for="attendance-department">Department:</label>
+                                <select id="attendance-department" onchange="loadAttendanceSheet()" style="background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-glass); padding: 10px 16px; border-radius: 10px; color: #fff; outline: none; margin-right: 15px; cursor: pointer;">
+                                    <option value="">All</option>
+                                    <option value="Computer Science Department">Computer Science</option>
+                                    <option value="Electrical Department">Electrical</option>
+                                    <option value="Printing Technology">Printing Technology</option>
+                                </select>
+                                
+                                <label for="attendance-date">Select Date:</label>
+                                <input type="date" id="attendance-date" onchange="loadAttendanceSheet()">
+                            </div>
+                            <div class="attendance-bulk-actions">
+                                <button class="btn btn-secondary" onclick="markAllAttendance('Present')">Mark All Present</button>
+                                <button class="btn btn-secondary" onclick="markAllAttendance('Absent')">Mark All Absent</button>
+                            </div>
+                        </div>
+
+                        <div class="table-scroll-wrapper">
+                            <table class="custom-table text-center">
+                                <thead>
+                                    <tr>
+                                        <th>Roll No.</th>
+                                        <th>Student Name</th>
+                                        <th>Semester</th>
+                                        <th>Department</th>
+                                        <th colspan="3">Attendance Status</th>
+                                    </tr>
+                                    <tr class="sub-header">
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th class="status-col">Present</th>
+                                        <th class="status-col">Absent</th>
+                                        <th class="status-col">Late</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendance-sheet-body">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="container-footer">
+                            <button class="btn btn-primary" onclick="submitAttendance()">Save Attendance Records</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Panel: Share Notes -->
+                <section class="tab-panel" id="panel-notes">
+                    <div class="actions-header-row">
+                        <h3>Shared Lecture Notes & Resources</h3>
+                        <button class="btn btn-primary" onclick="openModal('notes-modal')">+ Upload Resource</button>
+                    </div>
+
+                    <div class="resource-grid" id="notes-grid">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+
+                <!-- Panel: Assignments -->
+                <section class="tab-panel" id="panel-assignments">
+                    <div class="actions-header-row">
+                        <h3>Class Assignments</h3>
+                        <button class="btn btn-primary" onclick="openModal('assignments-modal')">+ Create Assignment</button>
+                    </div>
+
+                    <div class="resource-grid" id="assignments-grid">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+
+                <!-- Panel: Bulletin Board -->
+                <section class="tab-panel" id="panel-notices">
+                    <div class="actions-header-row">
+                        <h3>Bulletin Board Announcements</h3>
+                        <button class="btn btn-primary" onclick="openModal('notices-modal')">+ Post Announcement</button>
+                    </div>
+
+                    <div class="bulletin-list" id="notices-list">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+
+                <!-- ================= STUDENT DASHBOARD PANELS ================= -->
+                {% else %}
+                
+                <!-- Panel: My Attendance -->
+                <section class="tab-panel active" id="panel-student-attendance">
+                    <div class="student-stats-layout">
+                        <div class="student-stats-row">
+                            <!-- Card: Overall Percentage -->
+                            <div class="glass-container pct-card">
+                                <h3>Overall Attendance</h3>
+                                <div class="circle-progress-container">
+                                    <svg class="circle-svg" viewBox="0 0 100 100">
+                                        <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
+                                        <circle class="circle-bar" id="student-progress-circle" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                                    </svg>
+                                    <div class="percentage-overlay">
+                                        <span id="student-pct-text">0%</span>
+                                    </div>
+                                </div>
+                                <div class="pct-summary-text">
+                                    <p>You have attended <strong id="student-classes-present">0</strong> out of <strong id="student-classes-total">0</strong> scheduled classes.</p>
+                                </div>
+                            </div>
+
+                            <!-- Subject breakdown grid -->
+                            <div class="glass-container subjects-grid-card">
+                                <h3>Subject Breakdown</h3>
+                                <div class="student-subjects-grid" id="student-subjects-grid">
+                                    <!-- Dynamic subject attendance cards -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Table: Detailed Log -->
+                        <div class="glass-container log-card" style="margin-top: 24px;">
+                            <h3>Detailed Attendance Logs</h3>
+                            <div class="table-scroll-wrapper">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Subject</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="student-attendance-body">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Panel: Notes -->
+                <section class="tab-panel" id="panel-student-notes">
+                    <div class="resource-grid" id="student-notes-grid">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+
+                <!-- Panel: Assignments -->
+                <section class="tab-panel" id="panel-student-assignments">
+                    <div class="resource-grid" id="student-assignments-grid">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+
+                <!-- Panel: Notices -->
+                <section class="tab-panel" id="panel-student-notices">
+                    <div class="bulletin-list" id="student-notices-list">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </section>
+
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= MODALS (Teacher Only) ================= -->
+    {% if role == 'teacher' %}
+    
+    <!-- Modal: Share Note -->
+    <div class="modal-overlay" id="notes-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Upload Notes & Resources</h3>
+                <button class="modal-close" onclick="closeModal('notes-modal')">&times;</button>
+            </div>
+            <form id="upload-note-form" onsubmit="submitNoteForm(event)" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="note-subject">Subject *</label>
+                        <select id="note-subject" required class="form-control" style="background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-glass); padding: 10px 16px; border-radius: 10px; color: #fff; outline: none; cursor: pointer;"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="note-title">Title *</label>
+                        <input type="text" id="note-title" required placeholder="e.g. Chapter 2: Relational Schema">
+                    </div>
+                    <div class="form-group">
+                        <label for="note-desc">Description / Reference Details</label>
+                        <textarea id="note-desc" rows="3" placeholder="Provide extra notes or context..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="note-file">Upload Attachment (PDF, PPTX, Doc)</label>
+                        <div class="file-drop-area">
+                            <input type="file" id="note-file" class="file-input">
+                            <div class="file-msg">Drag & drop files or click to upload</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('notes-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Publish Notes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Create Assignment -->
+    <div class="modal-overlay" id="assignments-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Assign New Homework</h3>
+                <button class="modal-close" onclick="closeModal('assignments-modal')">&times;</button>
+            </div>
+            <form id="create-assignment-form" onsubmit="submitAssignmentForm(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="assignment-subject">Subject *</label>
+                        <select id="assignment-subject" required class="form-control" style="background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-glass); padding: 10px 16px; border-radius: 10px; color: #fff; outline: none; cursor: pointer;"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="assignment-title">Assignment Title *</label>
+                        <input type="text" id="assignment-title" required placeholder="e.g. Lab Exercise 3: SQL Triggers">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignment-desc">Problem Statement / Instructions</label>
+                        <textarea id="assignment-desc" rows="4" placeholder="Detail the questions, output format, or zip submission instructions..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="assignment-due">Due Date *</label>
+                        <input type="date" id="assignment-due" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('assignments-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign to Class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Create Announcement -->
+    <div class="modal-overlay" id="notices-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Post Bulletin Announcement</h3>
+                <button class="modal-close" onclick="closeModal('notices-modal')">&times;</button>
+            </div>
+            <form id="post-notice-form" onsubmit="submitNoticeForm(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="notice-title">Announcement Title *</label>
+                        <input type="text" id="notice-title" required placeholder="e.g. Dynamic Scheduling Adjustments">
+                    </div>
+                    <div class="form-group">
+                        <label for="notice-content">Notice Content *</label>
+                        <textarea id="notice-content" rows="5" required placeholder="Type the notification body details here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('notices-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post Announcement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% endif %}
+
+    <!-- Pass role data to JavaScript -->
+    <script>
+        const USER_ROLE = "{{ role }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
